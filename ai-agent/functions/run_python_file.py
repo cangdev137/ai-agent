@@ -12,24 +12,32 @@ def run_python_file(working_directory, file_path, args=[]):
         return f"Error: File \"{file_path}\" not found"
     if not target_file.endswith(".py"):
         return f"Error: \"{file_path}\" is not a Python file."
-    
-    interpreter_call = ["python3", target_file]
-    if args:
-        interpreter_call.extend(args)
-    completed_process = subprocess.run(interpreter_call, capture_output=True, text=True, cwd=full_working_directory, timeout=30)
+
 
     try:
-        process_result = ""
-        if completed_process.stdout:
-            process_result += f"STDOUT:\n{completed_process.stdout}\n"
-        if completed_process.stderr:
-            process_result += f"STDERR: \n{completed_process.stderr}\n"
-        if completed_process.returncode == 0:
-            process_result += f"Process exectued with non-zero code.\n"
+        interpreter_call = ["python3", target_file]
+        if args:
+            interpreter_call.extend(args)
 
-        if len(completed_process.stdout) == 0:
+        completed_process = subprocess.run(
+                interpreter_call, 
+                capture_output=True, 
+                text=True, 
+                cwd=full_working_directory, 
+                timeout=30
+        )
+
+        process_result_parts = []
+        if completed_process.stdout:
+            process_result_parts.append(f"STDOUT:\n{completed_process.stdout}")
+        if completed_process.stderr:
+            process_result_parts.append(f"STDERR: \n{completed_process.stderr}")
+        if completed_process.returncode == 0:
+            process_result_parts.append(f"Process exectued with non-zero code.")
+
+        if not process_result_parts:
             return f"No output produced."
-        return process_result
+        return "\n".join(process_result_parts)
     except Exception as e:
         return f"Error: executing Python file: {e}"
 
@@ -40,24 +48,19 @@ schema_run_python_file= genai.types.FunctionDeclaration(
         parameters = genai.types.Schema(
             type=genai.types.Type.OBJECT,
             properties={
-                "args": genai.types.Schema(
-                    type=genai.types.Type.ARRAY,
-                    description="An array holding any arguments the user wishes to pass to the function. If none are specified or provided, then this argument should be empty",
-                    items=genai.types.Schema(type=genai.types.Type.STRING)
-                ),
                 "file_path": genai.types.Schema(
-                    type=genai.types.Type.STRING,
-                    description="A path to the python file which should be executed, relative to the working directory. If not provided, the function returns a string denoting an error."
-                )
+                type=genai.types.Type.STRING,
+                description="A path to the python file which should be executed, relative to the working directory. If not provided, the function returns a string denoting an error."
+                ),
+                "args": genai.types.Schema(
+                type=genai.types.Type.ARRAY,
+                description="An array holding any arguments the user wishes to pass to the function. If none are specified or provided, then this argument should be empty",
+                items=genai.types.Schema(type=genai.types.Type.STRING)
+                ),
+
             },
+            required=["file_path"]
         )
     )
-
-'''
-                "arg": genai.types.Schema(
-                    type=genai.types.Type.ARRAY,
-                    description="A list of arguments that are provided to the python file as command-line arguments. If not provided, and empty list of arguments is used."
-                    )
-                '''
 
 
