@@ -1,5 +1,6 @@
 import os
 import subprocess
+from google import genai
 
 def run_python_file(working_directory, file_path, args=[]):
     full_working_directory = os.path.abspath(working_directory)
@@ -31,5 +32,32 @@ def run_python_file(working_directory, file_path, args=[]):
         return process_result
     except Exception as e:
         return f"Error: executing Python file: {e}"
+
+
+schema_run_python_file= genai.types.FunctionDeclaration(
+        name = "run_python_file",
+        description = "Runs an existing python file based on the provided file path, which is relative to the working directory. The user may optionally provide arguments that can be passed via the command line to the python file. Returns a string containing any STDOUT or STDERR messages, or if no output is produced, a message detailing so. If the file does not exist or is outside the provided working directory, the program returns a string denoting an error.",
+        parameters = genai.types.Schema(
+            type=genai.types.Type.OBJECT,
+            properties={
+                "args": genai.types.Schema(
+                    type=genai.types.Type.ARRAY,
+                    description="An array holding any arguments the user wishes to pass to the function. If none are specified or provided, then this argument should be empty",
+                    items=genai.types.Schema(type=genai.types.Type.STRING)
+                ),
+                "file_path": genai.types.Schema(
+                    type=genai.types.Type.STRING,
+                    description="A path to the python file which should be executed, relative to the working directory. If not provided, the function returns a string denoting an error."
+                )
+            },
+        )
+    )
+
+'''
+                "arg": genai.types.Schema(
+                    type=genai.types.Type.ARRAY,
+                    description="A list of arguments that are provided to the python file as command-line arguments. If not provided, and empty list of arguments is used."
+                    )
+                '''
 
 
